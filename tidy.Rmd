@@ -1,9 +1,10 @@
 ---
-title: "Untitled"
-author: "Chen Mo"
-date: "12/10/2021"
-output: pdf_document
+title: "tidy"
+author: "Haoyang Yi"
+date: "2021/12/11"
+output: html_document
 ---
+
 ```{r include = F}
 library(tidyverse)
 library(survey)
@@ -136,19 +137,4 @@ data1$INT8YR[data1$SDDSRVYR==1|data1$SDDSRVYR==2] = 2/4 * data1$WTINT4YR[data1$S
 data1$INT8YR[data1$SDDSRVYR==3|data1$SDDSRVYR==4] = 1/4 * data1$WTINT2YR[data1$SDDSRVYR==3|data1$SDDSRVYR==4]
 data1$INT8YR
 write.csv(data1, 'analysis.csv')
-```
-
-## additional analysis : bivariate analysis and introducing interaction terms in regression
-```{r }
-des = svydesign(ids = ~SDMVPSU, weights = ~INT8YR, strata =  ~SDMVSTRA, nest = T, data = data1)
-
-b = svyby(~outcome,~SMQ040+RIDRETH1,design=des,svymean)
-
-barplot(b,beside=F,names.arg=c('smoked.Black','Non-smoked.Black','smoked.White','Non-smoked.White','smoked.other','Non-smoked.other'),main="Proportions of Diabete across race and smoke status")
-
-c = svyby(~outcome,~age+RIDRETH1,design=des,svymean)
-
-barplot(c,beside=F,main="Proportions of Diabete across age group and smoke status")
-
-
 ```
