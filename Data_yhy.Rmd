@@ -8,139 +8,6 @@ output: pdf_document
 library(tidyverse)
 library(survey)
 ```
-## 数据录入
-```{r}
-library(foreign)
-### 1999-2000
-demo_1999 = read.xport("DEMO.XPT")
-lab18_1999 = read.xport("LAB18.XPT")
-lab13am_1999 = read.xport("LAB13AM.XPT")
-lab10am_1999 = read.xport("LAB10AM.XPT")
-bpx_1999 = read.xport("BPX.XPT")
-bmx_1999 = read.xport("BMX.XPT")
-smq_1999 = read.xport("SMQ.XPT")
-bpq_1999 = read.xport("BPQ.XPT")
-alq_1999 = read.xport("ALQ.XPT")
-mcq_1999 = read.xport("MCQ.XPT")
-diq_1999 = read.xport("DIQ.XPT")
-
-### 2001-2002
-demo_2001 = read.xport("DEMO_B.XPT")
-lab18_2001 = read.xport("L40_B.XPT")
-lab13am_2001 = read.xport("L13AM_B.XPT")
-lab10am_2001 = read.xport("L10AM_B.XPT")
-bpx_2001 = read.xport("BPX_B.XPT")
-bmx_2001 = read.xport("BMX_B.XPT")
-smq_2001 = read.xport("SMQ_B.XPT")
-bpq_2001 = read.xport("BPQ_B.XPT")
-alq_2001 = read.xport("ALQ_B.XPT")
-mcq_2001 = read.xport("MCQ_B.XPT")
-diq_2001 = read.xport("DIQ_B.XPT")
-
-### 2003-2004
-demo_2003 = read.xport("DEMO_C.XPT")
-lab18_2003 = read.xport("L40_C.XPT")
-lab13am_2003 = read.xport("L13AM_C.XPT")
-lab10am_2003 = read.xport("L10AM_C.XPT")
-bpx_2003 = read.xport("BPX_C.XPT")
-bmx_2003 = read.xport("BMX_C.XPT")
-smq_2003 = read.xport("SMQ_C.XPT")
-bpq_2003 = read.xport("BPQ_C.XPT")
-alq_2003 = read.xport("ALQ_C.XPT")
-mcq_2003 = read.xport("MCQ_C.XPT")
-diq_2003 = read.xport("DIQ_C.XPT")
-
-
-### 2005-2006
-demo_2005 = read.xport("DEMO_D.XPT")
-lab18_2005 = read.xport("BIOPRO_D.XPT")
-lab13am_2005 = read.xport("TRIGLY_D.XPT")
-lab10am_2005 = read.xport("GLU_D.XPT")
-bpx_2005 = read.xport("BPX_D.XPT")
-bmx_2005 = read.xport("BMX_D.XPT")
-smq_2005 = read.xport("SMQ_D.XPT")
-bpq_2005 = read.xport("BPQ_D.XPT")
-alq_2005 = read.xport("ALQ_D.XPT")
-mcq_2005 = read.xport("MCQ_D.XPT")
-diq_2005 = read.xport("DIQ_D.XPT")
-```
-
-## 数据处理
-```{r}
-library(tidyverse)
-demo_2003 = demo_2003 %>% mutate(WTINT4YR = NA) ## 2003年WTINT4YR
-demo_2005 = demo_2005 %>% mutate(WTINT4YR = NA) ## 2005年WTINT4YR
-lab18_2001 = lab18_2001 %>% mutate(LBXSTB = LBDSTB) %>% 
-        select(-LBDSTB) ## 2001年LBDSTB换成LBXSTB
-bpx_2003 = bpx_2003 %>% mutate(BPXSAR = NA) ## 2003年BPXSAR
-bpx_2003 = bpx_2003 %>% mutate(BPXDAR = NA) ## 2003年BPXDAR
-bpx_2005 = bpx_2005 %>% mutate(BPXSAR = NA) ## 2005年BPXSAR
-bpx_2005 = bpx_2005 %>% mutate(BPXDAR = NA) ## 2005年BPXDAR
-diq_2005 = diq_2005 %>% mutate(DIQ070 = DID070) %>% 
-        select(-DID070) ## 2005年DID070换成DIQ070
-```
-
-## 数据合并
-```{r}
-library(dplyr)
-## 1999-2000
-t1_1999 = full_join(demo_1999, lab18_1999, by = "SEQN")
-t2_1999 = full_join(t1_1999, lab13am_1999, by = "SEQN")
-t3_1999 = full_join(t2_1999, lab10am_1999, by = "SEQN")
-t4_1999 = full_join(t3_1999, bpx_1999, by = "SEQN")
-t5_1999 = full_join(t4_1999, bmx_1999, by = "SEQN")
-t6_1999 = full_join(t5_1999, smq_1999, by = "SEQN")
-t7_1999 = full_join(t6_1999, bpq_1999, by = "SEQN")
-t8_1999 = full_join(t7_1999, alq_1999, by = "SEQN")
-t9_1999 = full_join(t8_1999, mcq_1999, by = "SEQN")
-t10_1999 = full_join(t9_1999, diq_1999, by = "SEQN")
-final_1999 = t10_1999 %>% select(SEQN,SDMVPSU,SDMVSTRA,WTINT4YR,WTINT2YR,RIDAGEMN,RIAGENDR,RIDRETH1,DMDEDUC2,DMDMARTL,LBDSTBSI,LBXTR,LBXGLU,BMXWAIST,BMXBMI,BPXSAR,BPXDAR,SMQ040,BPQ020,BPQ080,BPQ090A,ALQ120Q,ALQ130,MCQ160F,MCQ160C,MCQ160E,MCQ160L,DIQ010,DIQ050,DIQ070)
-
-## 2001-2002
-t1_2001 = full_join(demo_2001, lab18_2001, by = "SEQN")
-t2_2001 = full_join(t1_2001, lab13am_2001, by = "SEQN")
-t3_2001 = full_join(t2_2001, lab10am_2001, by = "SEQN")
-t4_2001 = full_join(t3_2001, bpx_2001, by = "SEQN")
-t5_2001 = full_join(t4_2001, bmx_2001, by = "SEQN")
-t6_2001 = full_join(t5_2001, smq_2001, by = "SEQN")
-t7_2001 = full_join(t6_2001, bpq_2001, by = "SEQN")
-t8_2001 = full_join(t7_2001, alq_2001, by = "SEQN")
-t9_2001 = full_join(t8_2001, mcq_2001, by = "SEQN")
-t10_2001 = full_join(t9_2001, diq_2001, by = "SEQN")
-final_2001 = t10_2001 %>% select(SEQN,SDMVPSU,SDMVSTRA,WTINT4YR,WTINT2YR,RIDAGEMN,RIAGENDR,RIDRETH1,DMDEDUC2,DMDMARTL,LBDSTBSI,LBXTR,LBXGLU,BMXWAIST,BMXBMI,BPXSAR,BPXDAR,SMQ040,BPQ020,BPQ080,BPQ090A,ALQ120Q,ALQ130,MCQ160F,MCQ160C,MCQ160E,MCQ160L,DIQ010,DIQ050,DIQ070)
-
-## 2003-2004
-t1_2003 = full_join(demo_2003, lab18_2003, by = "SEQN")
-t2_2003 = full_join(t1_2003, lab13am_2003, by = "SEQN")
-t3_2003 = full_join(t2_2003, lab10am_2003, by = "SEQN")
-t4_2003 = full_join(t3_2003, bpx_2003, by = "SEQN")
-t5_2003 = full_join(t4_2003, bmx_2003, by = "SEQN")
-t6_2003 = full_join(t5_2003, smq_2003, by = "SEQN")
-t7_2003 = full_join(t6_2003, bpq_2003, by = "SEQN")
-t8_2003 = full_join(t7_2003, alq_2003, by = "SEQN")
-t9_2003 = full_join(t8_2003, mcq_2003, by = "SEQN")
-t10_2003 = full_join(t9_2003, diq_2003, by = "SEQN")
-final_2003 = t10_2003 %>% select(SEQN,SDMVPSU,SDMVSTRA,WTINT4YR,WTINT2YR,RIDAGEMN,RIAGENDR,RIDRETH1,DMDEDUC2,DMDMARTL,LBDSTBSI,LBXTR,LBXGLU,BMXWAIST,BMXBMI,BPXSAR,BPXDAR,SMQ040,BPQ020,BPQ080,BPQ090A,ALQ120Q,ALQ130,MCQ160F,MCQ160C,MCQ160E,MCQ160L,DIQ010,DIQ050,DIQ070)
-
-## 2005-2006
-t1_2005 = full_join(demo_2005, lab18_2005, by = "SEQN")
-t2_2005 = full_join(t1_2005, lab13am_2005, by = "SEQN")
-t3_2005 = full_join(t2_2005, lab10am_2005, by = "SEQN")
-t4_2005 = full_join(t3_2005, bpx_2005, by = "SEQN")
-t5_2005 = full_join(t4_2005, bmx_2005, by = "SEQN")
-t6_2005 = full_join(t5_2005, smq_2005, by = "SEQN")
-t7_2005 = full_join(t6_2005, bpq_2005, by = "SEQN")
-t8_2005 = full_join(t7_2005, alq_2005, by = "SEQN")
-t9_2005 = full_join(t8_2005, mcq_2005, by = "SEQN")
-t10_2005 = full_join(t9_2005, diq_2005, by = "SEQN")
-final_2005 = t10_2005 %>% select(SEQN,SDMVPSU,SDMVSTRA,WTINT4YR,WTINT2YR,RIDAGEMN,RIAGENDR,RIDRETH1,DMDEDUC2,DMDMARTL,LBDSTBSI,LBXTR,LBXGLU,BMXWAIST,BMXBMI,BPXSAR,BPXDAR,SMQ040,BPQ020,BPQ080,BPQ090A,ALQ120Q,ALQ130,MCQ160F,MCQ160C,MCQ160E,MCQ160L,DIQ010,DIQ050,DIQ070)
-
-## 合并所有年份1999-2006
-final_df = rbind(final_1999, final_2001, final_2003, final_2005)
-summary(final_df$SMQ040)
-## export csv
-write.csv(final_df, file = "nhanes99_06_NEW.csv", row.names = F)
-```
 
 ```{r}
 # recode
@@ -192,6 +59,7 @@ data = data %>%
          DIQ070 = case_when(DIQ070 == 1 ~ 1,
                             DIQ070 ==2 ~ 2,
                             DIQ070 ==9 ~3))
+
 data$RIAGENDR <- factor(data$RIAGENDR, levels = 1: 2, labels =c("Male", "Female"))
 data$RIDRETH1 <- factor(data$RIDRETH1, levels = 1: 3, labels =c("Black", "White", "other"))
 data$DMDEDUC2 <- factor(data$DMDEDUC2, levels = 1: 2, labels =c("Less Than 9th Grade", "9th Grade or above"))
@@ -221,12 +89,18 @@ data$outcome[data$LBXGLU>=126] = 1
 data$outcome[data$DIQ010=='Yes'] = 1
 data$outcome[data$DIQ050=='Yes'] = 1
 data$outcome[data$DIQ070=='Yes'] = 1
-data$outcome[data$LBXGLU<126&data$DIQ010!='Yes'&data$DIQ010!='Yes'&data$DIQ010!='Yes'] = 0
+data$outcome[data$LBXGLU<=126 & data$DIQ010!='Yes'&data$DIQ010!='Yes'&data$DIQ010!='Yes'] = 0
+data$outcome = as.factor(data$outcome)
 data1 = data %>%
    drop_na(outcome) %>%
    filter(RIDAGEMN>=20) %>%
    filter(MCQ160L!= 'Yes')
 # exclusion criteria: no missing value in outcome, age >=20, no history of liver disease.
+data = data %>%
+   mutate(age = case_when(RIDAGEMN<=39 ~ 1,
+                          RIDAGEMN>=40 & RIDAGEMN <=59 ~2,
+                          RIDAGEMN>=60 ~ 3))
+data$age <- factor(data$age, levels = 1: 3, labels =c("20-39", "40-59", "60 and above"))
 
 data$hypten = NULL # definition of hypertension is : mean systolic blood pressure
 # of 140 mm Hg, a mean diastolic blood pressure of 90 mm Hg OR have been told by doctor
@@ -235,20 +109,42 @@ data1$hypten[data1$BPXDAR>=90&data1$BPXSAR>=140] =1
 data1$hypten[data1$BPXDAR<=90|data1$BPXSAR<=140] =0
 data1$hypten[data1$BPQ020 == 'Yes'] = 1
 table(data1$hypten)
+data1$hypten = as.factor(data1$hypten)
+
 
 data1$totalcho = NULL  # Total cholesterol: reporting that a physician had diagnosed that person with high cholesterol OR
 # reporting that a physician had advised that person to take cholesterol lowering medications 
 data1$totalcho[data1$BPQ080 == 'Yes'|data1$BPQ090 == 'Yes'] = 1
 data1$totalcho[data1$BPQ080 != 'Yes'| data1$BPQ090 != 'Yes'] = 0
 table(data1$totalcho)
+data1$totalcho = as.factor(data1$totalcho)
 
 data1$cardiov = NULL # cardiovascular disease was defined as a self-reported history of coronary heart disease, previous heart attack, or history of stroke. 
 data1$cardiov[data1$MCQ160F== 'Yes'|data1$MCQ160C== 'Yes'|data1$MCQ160E== 'Yes']=1
 data1$cardiov[data1$MCQ160F!= 'Yes'&data1$MCQ160C!= 'Yes'& data1$MCQ160E!= 'Yes']=0
 table(data1$cardiov)
-
+data1$cardiov = as.factor(data1$cardiov)
 data1$bilirudin = NULL
 data1$bilirudin[data1$LBDSTBSI>=10]=1
 data1$bilirudin[data1$LBDSTBSI<=10]=0
 table(data1$bilirudin)
+data1$bilirudin = as.factor(data1$bilirudin)
+
+# recalculate the weight in 8 yrs
+data1$INT8YR = NULL
+data1$INT8YR[data1$SDDSRVYR==1|data1$SDDSRVYR==2] = 2/4 * data1$WTINT4YR[data1$SDDSRVYR==1|data1$SDDSRVYR==2]
+data1$INT8YR[data1$SDDSRVYR==3|data1$SDDSRVYR==4] = 1/4 * data1$WTINT2YR[data1$SDDSRVYR==3|data1$SDDSRVYR==4]
+data1$INT8YR
+write.csv(data1, 'analysis.csv')
+```
+
+## additional analysis : bivariate analysis and introducing interaction terms in regression
+```{r}
+des = svydesign(ids = ~SDMVPSU, weights = ~INT8YR, strata =  ~SDMVSTRA, nest = T, data = data1)
+?svyby
+b = svyby(~outcome,~SMQ040+RIDRETH1,design=des,svymean)
+?barplot
+barplot(b,beside=T,names.arg(),main="Proportions of Diabete across race and smoke status")
+table(df1$HEALTH)
+
 ```
