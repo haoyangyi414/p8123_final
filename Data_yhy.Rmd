@@ -134,21 +134,73 @@ data1$bilirudin = as.factor(data1$bilirudin)
 data1$INT8YR = NULL
 data1$INT8YR[data1$SDDSRVYR==1|data1$SDDSRVYR==2] = 2/4 * data1$WTINT4YR[data1$SDDSRVYR==1|data1$SDDSRVYR==2]
 data1$INT8YR[data1$SDDSRVYR==3|data1$SDDSRVYR==4] = 1/4 * data1$WTINT2YR[data1$SDDSRVYR==3|data1$SDDSRVYR==4]
-data1$INT8YR
+
+
 write.csv(data1, 'analysis.csv')
 ```
 
 ## additional analysis : bivariate analysis and introducing interaction terms in regression
-```{r }
+```{r fig.width=15}
+#exploring potential relationship between two covariates in predicting the outcome by bivariate analysis
 des = svydesign(ids = ~SDMVPSU, weights = ~INT8YR, strata =  ~SDMVSTRA, nest = T, data = data1)
+options( survey.lonely.psu = "adjust" )
+
+plot(density(data1$LBDSTBSI,na.rm = T,adjust = 2))
+
+svyhist(~LBDSTBSI,design=des,main="Histogram with kernel density")
+
+den  =svysmooth(~LBDSTBSI, des,bandwidth = 5)
+lines(den)
+svyhist(~BMXBMI,design=des,main="Histogram with kernel density")
+den  =svysmooth(~BMXBMI, des)
+lines(den)
 
 b = svyby(~outcome,~SMQ040+RIDRETH1,design=des,svymean)
 
 barplot(b,beside=F,names.arg=c('smoked.Black','Non-smoked.Black','smoked.White','Non-smoked.White','smoked.other','Non-smoked.other'),main="Proportions of Diabete across race and smoke status")
-
-c = svyby(~outcome,~age+RIDRETH1,design=des,svymean)
+svychisq(~SMQ040+RIDRETH1,des,statistic = 'F') # Rao-Scott F-statistic test shows association between smoke and race. 
+c = svyby(~outcome,~age+SMQ040,design=des,svymean)
 
 barplot(c,beside=F,main="Proportions of Diabete across age group and smoke status")
 
+d = svyby(~outcome,~age+RIDRETH1,design=des,svymean)
 
+barplot(d,beside=F,main="Proportions of Diabete across age group and race")
+
+e = svyby(~outcome,~age+RIAGENDR,design=des,svymean)
+
+barplot(e,beside=F,main="Proportions of Diabete across age group and sex")
+
+f = svyby(~outcome,~RIDRETH1+RIAGENDR,design=des,svymean)
+
+barplot(f,beside=F,main="Proportions of Diabete across race and sex")
+
+g = svyby(~outcome,~SMQ040+RIAGENDR,design=des,svymean)
+
+barplot(g,beside=F,main="Proportions of Diabete across smoke status and sex")
+
+h = svyby(~outcome,~age+DMDEDUC2,design=des,svymean)
+
+barplot(h,beside=F,main="Proportions of Diabete across age and education")
+
+i = svyby(~outcome,~age+DMDMARTL,design=des,svymean)
+
+barplot(i,beside=F,main="Proportions of Diabete across age and marrital")
+
+j = svyby(~outcome,~RIDRETH1+DMDEDUC2,design=des,svymean)
+
+barplot(j,beside=F,main="Proportions of Diabete across race and education")
+svychisq(~RIDRETH1+DMDEDUC2,des,statistic = 'F') # Rao-Scott F-statistic test shows association between smoke and race. 
+
+k = svyby(~outcome,~RIDRETH1+DMDMARTL,design=des,svymean)
+
+barplot(k,beside=F,main="Proportions of Diabete across race and marrital")
+
+l = svyby(~outcome,~RIDRETH1+SMQ040,design=des,svymean)
+
+barplot(l,beside=F,main="Proportions of Diabete across race and smoke status")
+
+# add interaction terms in covariates adjusted model
+
+# regTermTest(model2, ~ell+meals, method="LRT", df=NULL)
 ```
