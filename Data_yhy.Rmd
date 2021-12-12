@@ -1,8 +1,8 @@
 ---
-title: "Untitled"
-author: "Chen Mo"
+title: "analysis"
+author: "Chen Mo, Zhixing Wu, Haoyang Yi"
 date: "12/10/2021"
-output: pdf_document
+output: html_document
 ---
 ```{r include = F}
 library(tidyverse)
@@ -139,6 +139,110 @@ data1$INT8YR[data1$SDDSRVYR==3|data1$SDDSRVYR==4] = 1/4 * data1$WTINT2YR[data1$S
 write.csv(data1, 'analysis.csv')
 ```
 
+```{r}
+# data cleaning
+data1 = read.csv("analysis.csv")
+
+data1 = data1 %>% 
+   mutate(bmi = case_when (BMXBMI<25 ~ 1,
+                           (BMXBMI>=25 & BMXBMI<29) ~ 2,
+                           BMXBMI>=30 ~ 3))
+data1$bmi <- factor(data1$bmi, levels = 1: 3, labels =c("less than 25", "25-29", "30 and above"))
+
+data1$waist[data1$RIAGENDR=="Male" & data1$BMXWAIST < 102] = "lower"
+data1$waist[data1$RIAGENDR=="Male" & data1$BMXWAIST >= 102] = "higher"
+data1$waist[data1$RIAGENDR=="Female" & data1$BMXWAIST < 88] = "lower"
+data1$waist[data1$RIAGENDR=="Female" & data1$BMXWAIST >= 88] = "higher"
+data1$waist = as.factor(data1$waist)
+
+data1$tri[data1$LBXTR < 90] = "low"
+data1$tri[data1$LBXTR >= 90] = "high"
+data1$tri = as.factor(data1$tri)
+
+data1$al[data1$RIAGENDR=="Male" & data1$ALQ130 > 4] = "heavy consumption"
+data1$al[data1$RIAGENDR=="Male" & data1$ALQ130 <= 4] = "moderate or no consumption"
+data1$al[data1$RIAGENDR=="Female" & data1$ALQ130 > 3] = "heavy consumption"
+data1$al[data1$RIAGENDR=="Female" & data1$ALQ130 <= 3] = "moderate or no consumption"
+data1$al = as.factor(data1$al)
+
+```
+
+
+```{r}
+# survey design
+dstrat <- svydesign(id = ~SDMVPSU, strata = ~SDMVSTRA, weights = ~INT8YR, data = data1, nest= T)
+```
+
+
+```{r}
+# figure 1 
+svyhist(~LBDSTBSI,design=dstrat,main="Histogram with kernel density")
+den  =svysmooth(~LBDSTBSI, dstrat,bandwidth = 5)
+lines(den)
+```
+
+
+```{r}
+# age
+age = svyby(~bilirudin, ~age, design = dstrat, svymean, na.rm = TRUE)
+age
+confint(age)
+
+# gender
+gender = svyby(~bilirudin, ~factor(RIAGENDR), design = dstrat, svymean, na.rm = TRUE)
+gender
+confint(gender)
+
+# education
+edu = svyby(~bilirudin, ~factor(DMDEDUC2), design = dstrat, svymean, na.rm = TRUE)
+edu
+confint(edu)
+
+# race
+race = svyby(~bilirudin, ~factor(RIDRETH1), design = dstrat, svymean, na.rm = TRUE)
+race
+confint(race)
+
+# smoke
+smoke = svyby(~bilirudin, ~factor(SMQ040), design = dstrat, svymean, na.rm = TRUE)
+smoke
+confint(smoke)
+
+# alcohol
+al = svyby(~bilirudin, ~factor(al), design = dstrat, svymean, na.rm = TRUE)
+al
+confint(al)
+
+# triclycerides
+tri = svyby(~bilirudin, ~factor(tri), design = dstrat, svymean, na.rm = TRUE)
+tri
+confint(tri)
+
+# waist circumference
+waist = svyby(~bilirudin, ~factor(waist), design = dstrat, svymean, na.rm = TRUE)
+waist
+confint(waist)
+
+# bmi
+bmi = svyby(~bilirudin, ~factor(bmi), design = dstrat, svymean, na.rm = TRUE)
+bmi
+confint(bmi)
+```
+
+
+
+
+```{r}
+# logistic regression without covariates
+model1 <- svyglm(bilirudin ~ factor(hypten) + factor(totalcho) + factor(cardiov) + factor(tri) + factor(al) + factor(bmi) + factor(waist), family=quasibinomial, design=dstrat)
+summary(model1)
+```
+
+```{r}
+# logistic regression with covariates
+model2 <- svyglm(bilirudin ~ factor(hypten) + factor(totalcho) + factor(cardiov) + factor(tri) + factor(al) + factor(bmi) + factor(waist) + factor(age) + factor(RIAGENDR) + factor(DMDEDUC2) + factor(RIDRETH1) + factor(SMQ040) + factor(DMDMARTL), family=quasibinomial, design=dstrat)
+summary(model2)
+```
 ## additional analysis : bivariate analysis and introducing interaction terms in regression
 ```{r fig.width=15}
 #exploring potential relationship between two covariates in predicting the outcome by bivariate analysis
@@ -157,7 +261,7 @@ lines(den)
 
 b = svyby(~outcome,~SMQ040+RIDRETH1,design=des,svymean)
 
-barplot(b,beside=F,names.arg=c('smoked.Black','Non-smoked.Black','smoked.White','Non-smoked.White','smoked.other','Non-smoked.other'),main="Proportions of Diabete across race and smoke status")
+barplot(b,beside=F,main="Proportions of Diabete across race and smoke status")
 svychisq(~SMQ040+RIDRETH1,des,statistic = 'F') # Rao-Scott F-statistic test shows association between smoke and race. 
 c = svyby(~outcome,~age+SMQ040,design=des,svymean)
 
@@ -196,11 +300,20 @@ k = svyby(~outcome,~RIDRETH1+DMDMARTL,design=des,svymean)
 
 barplot(k,beside=F,main="Proportions of Diabete across race and marrital")
 
-l = svyby(~outcome,~RIDRETH1+SMQ040,design=des,svymean)
 
-barplot(l,beside=F,main="Proportions of Diabete across race and smoke status")
 
 # add interaction terms in covariates adjusted model
 
-# regTermTest(model2, ~ell+meals, method="LRT", df=NULL)
+model3 <- svyglm(bilirudin ~ factor(hypten) + factor(totalcho) + factor(cardiov) + factor(tri) + factor(al) + factor(bmi) + factor(waist) + factor(age) + factor(RIAGENDR) + factor(DMDEDUC2) + factor(RIDRETH1) + factor(SMQ040) + factor(DMDMARTL)+factor(SMQ040)*factor(RIDRETH1), family=quasibinomial, design=dstrat)
+
+summary(model3)
+
+regTermTest(model3, ~bilirudin ~ factor(hypten) + factor(totalcho) + factor(cardiov) + factor(tri) + factor(al) + factor(bmi) + factor(waist) + factor(age) + factor(RIAGENDR) + factor(DMDEDUC2) + factor(RIDRETH1) + factor(SMQ040) + factor(DMDMARTL), method="LRT", df=1) # Rao-Scott test based on the estimated log likelihood ratio ----------p-value = 0.061 which indicates model 3 considering interaction between race and smoke is not better than the smaller model 2
+
+model4 <- svyglm(bilirudin ~ factor(hypten) + factor(totalcho) + factor(cardiov) + factor(tri) + factor(al) + factor(bmi) + factor(waist) + factor(age) + factor(RIAGENDR) + factor(DMDEDUC2) + factor(RIDRETH1) + factor(SMQ040) + factor(DMDMARTL)+factor(DMDEDUC2)*factor(RIDRETH1), family=quasibinomial, design=dstrat)
+
+summary(model4)
+
+regTermTest(model4, ~bilirudin ~ factor(hypten) + factor(totalcho) + factor(cardiov) + factor(tri) + factor(al) + factor(bmi) + factor(waist) + factor(age) + factor(RIAGENDR) + factor(DMDEDUC2) + factor(RIDRETH1) + factor(SMQ040) + factor(DMDMARTL), method="LRT", df=1) # Rao-Scott test based on the estimated log likelihood ratio ----------p-value = 0.0418 < 0.05 which indicates model 4 considering interaction between race and education is  better than the smaller model 2
+
 ```
